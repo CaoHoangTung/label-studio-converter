@@ -30,6 +30,7 @@ from label_studio_converter.utils import (
     get_annotator,
     get_json_root_type,
     prettify_result,
+    process_upwatch_data
 )
 from label_studio_converter import brush
 from label_studio_converter.audio import convert_to_asr_json_manifest
@@ -55,6 +56,8 @@ class Format(Enum):
     YOLO = 11
     CSV_OLD = 12
 
+    UPWATCH_CSV = 1000
+
     def __str__(self):
         return self.name
 
@@ -68,6 +71,11 @@ class Format(Enum):
 
 class Converter(object):
     _FORMAT_INFO = {
+        Format.UPWATCH_CSV: {
+            'title': 'UPWATCH_CSV',
+            'description': "Customized format",
+            'link': 'https://labelstud.io/guide/export.html#JSON',
+        },
         Format.JSON: {
             'title': 'JSON',
             'description': "List of items in raw JSON format stored in one JSON file. Use to export both the data "
@@ -189,7 +197,11 @@ class Converter(object):
         if isinstance(format, str):
             format = Format.from_string(format)
 
-        if format == Format.JSON:
+        if format == Format.UPWATCH_CSV:
+            self.convert_to_upwatch_format(
+                input_data, output_data, is_dir=is_dir
+            )
+        elif format == Format.JSON:
             self.convert_to_json(input_data, output_data, is_dir=is_dir)
         elif format == Format.JSON_MIN:
             self.convert_to_json_min(input_data, output_data, is_dir=is_dir)
@@ -279,6 +291,7 @@ class Converter(object):
     def _get_supported_formats(self):
         if len(self._data_keys) > 1:
             return [
+                Format.UPWATCH_CSV.name,
                 Format.JSON.name,
                 Format.JSON_MIN.name,
                 Format.CSV.name,
@@ -480,6 +493,12 @@ class Converter(object):
 
         with io.open(output_file, mode='w', encoding='utf8') as fout:
             json.dump(records, fout, indent=2, ensure_ascii=False)
+
+    
+    def convert_to_upwatch_format(self, input_data, output_dir, is_dir=True, **kwargs):
+        self._check_format(Format.UPWATCH_CSV)
+        process_upwatch_data(input_data, output_dir)
+
 
     def convert_to_csv(self, input_data, output_dir, is_dir=True, **kwargs):
         self._check_format(Format.CSV)
