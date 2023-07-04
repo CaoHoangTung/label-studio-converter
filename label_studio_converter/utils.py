@@ -400,13 +400,16 @@ def get_filename(annotation_item):
 def process_upwatch_annotation(annotation_item, output_dir):
     export_filename = get_filename(annotation_item)
 
-    sensor_offset = annotation_item['data']['sensor_offset']
     csv_path = annotation_item['data']['csv_path']
+    csv_path_2 = annotation_item['data']['csv_path_2']
 
+    # Read signal of 2 sensors
     signal_data = pd.read_csv(csv_path)
+    signal_data_2 = pd.read_csv(csv_path_2)
 
-    # Calculate the ax3 array from its components
+    # Calculate the ax3 array from its components in both sensors
     signal_data['ax3_butterworth'] = signal_data[[f'ax3_{idx}' for idx in range(5)]].apply(lambda row: row.values.tolist(), axis=1)
+    signal_data_2['ax3_butterworth'] = signal_data_2[[f'ax3_{idx}' for idx in range(5)]].apply(lambda row: row.values.tolist(), axis=1)
 
     with open(export_filename, 'w') as fout:
         # Only using first user annotation
@@ -414,15 +417,30 @@ def process_upwatch_annotation(annotation_item, output_dir):
 
         events, sensor_numbers, sensor_starts, sensor_ends, butterworth_arrays, bandpass_arrays = [], [], [], [], [], []
         for result_item in annotation_result:
+            sensor_number = annotation_item['data']['sensor']
+            if str(sensor_number) != '1': continue # Skipping data from other sensors than 1
+
+            # Add sensor 1 data
             events.append(result_item['value']['timeserieslabels'])
-            sensor_numbers.append(annotation_item['data']['sensor'])
+            sensor_numbers.append(sensor_number)
 
             start_index, end_index = result_item['value']['start'], result_item['value']['end']
-            sensor_starts.append(start_index + sensor_offset)
-            sensor_ends.append(end_index + sensor_offset)
+            sensor_starts.append(start_index)
+            sensor_ends.append(end_index)
 
             butterworth_arrays.append(list(signal_data['ax3_butterworth'][start_index:end_index]))
             bandpass_arrays.append(list(signal_data['ax3_bandpass'][start_index:end_index]))
+
+            # Add sensor 2 data
+            events.append(result_item['value']['timeserieslabels'])
+            sensor_numbers.append(2)
+
+            start_index, end_index = result_item['value']['start'], result_item['value']['end']
+            sensor_starts.append(start_index)
+            sensor_ends.append(end_index)
+
+            butterworth_arrays.append(list(signal_data_2['ax3_butterworth'][start_index:end_index]))
+            bandpass_arrays.append(list(signal_data_2['ax3_bandpass'][start_index:end_index]))
 
         df = pd.DataFrame({
             'events': events,
