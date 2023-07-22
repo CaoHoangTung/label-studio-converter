@@ -415,7 +415,7 @@ def process_upwatch_annotation(annotation_item, output_dir):
         # Only using first user annotation
         annotation_result = annotation_item['annotations'][0]['result']
 
-        events, sensor_numbers, sensor_starts, sensor_ends, butterworth_arrays, bandpass_arrays = [], [], [], [], [], []
+        events, sensor_numbers, sensor_starts, sensor_ends, butterworth_arrays, bandpass_arrays, meta_text_array = [], [], [], [], [], [], []
         for result_item in annotation_result:
             sensor_number = annotation_item['data']['sensor']
             if str(sensor_number) != '1': continue # Skipping data from other sensors than 1
@@ -431,6 +431,8 @@ def process_upwatch_annotation(annotation_item, output_dir):
             butterworth_arrays.append(list(signal_data['ax3_butterworth'][start_index:end_index]))
             bandpass_arrays.append(list(signal_data['ax3_bandpass'][start_index:end_index]))
 
+            meta_text_array.append(list(result_item['meta']['text']))
+
             # Add sensor 2 data
             events.append(result_item['value']['timeserieslabels'])
             sensor_numbers.append(2)
@@ -442,6 +444,9 @@ def process_upwatch_annotation(annotation_item, output_dir):
             butterworth_arrays.append(list(signal_data_2['ax3_butterworth'][start_index:end_index]))
             bandpass_arrays.append(list(signal_data_2['ax3_bandpass'][start_index:end_index]))
 
+            meta_text_array.append(list(result_item['meta']['text']))
+        print("Creating dataframe")
+
         df = pd.DataFrame({
             'events': events,
             'sensor_numbers': sensor_numbers,
@@ -449,6 +454,7 @@ def process_upwatch_annotation(annotation_item, output_dir):
             'sensor_ends': sensor_ends,
             'ax3_butterworth': butterworth_arrays,
             'ax3_bandpass': bandpass_arrays,
+            'meta_text_array': meta_text_array
         })
         print('Saving result to', output_dir)
         os.makedirs(output_dir, exist_ok=True)
