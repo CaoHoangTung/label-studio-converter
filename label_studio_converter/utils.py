@@ -431,7 +431,6 @@ def process_upwatch_annotation(annotation_item, output_dir):
             butterworth_arrays.append(list(signal_data['ax3_butterworth'][start_index:end_index]))
             bandpass_arrays.append(list(signal_data['ax3_bandpass'][start_index:end_index]))
 
-            meta_text_array.append(list(result_item['meta']['text']))
 
             # Add sensor 2 data
             events.append(result_item['value']['timeserieslabels'])
@@ -444,7 +443,9 @@ def process_upwatch_annotation(annotation_item, output_dir):
             butterworth_arrays.append(list(signal_data_2['ax3_butterworth'][start_index:end_index]))
             bandpass_arrays.append(list(signal_data_2['ax3_bandpass'][start_index:end_index]))
 
-            meta_text_array.append(list(result_item['meta']['text']))
+            if 'meta' in result_item and 'text' in result_item['meta']:
+                meta_text_array.append(list(result_item['meta']['text']))
+                meta_text_array.append(list(result_item['meta']['text']))
         print("Creating dataframe")
 
         df = pd.DataFrame({
