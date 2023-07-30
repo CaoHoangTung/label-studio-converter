@@ -443,9 +443,11 @@ def process_upwatch_annotation(annotation_item, output_dir):
             butterworth_arrays.append(list(signal_data_2['ax3_butterworth'][start_index:end_index]))
             bandpass_arrays.append(list(signal_data_2['ax3_bandpass'][start_index:end_index]))
 
+            note = ''
             if 'meta' in result_item and 'text' in result_item['meta']:
-                meta_text_array.append(list(result_item['meta']['text']))
-                meta_text_array.append(list(result_item['meta']['text']))
+                note = list(result_item['meta']['text'])
+            meta_text_array.append(note)
+            meta_text_array.append(note)
         print("Creating dataframe")
 
         df = pd.DataFrame({
